@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:layout/pages/detail.dart';
+import 'package:http/http.dart' as http;
+import 'dart:async';
 
 class HomePage extends StatefulWidget {
   // const HomePage({ Key? key }) : super(key: key);
@@ -17,26 +19,28 @@ class _HomePageState extends State<HomePage> {
           title: Text("ความรู้เกี่ยวกับคอมพิวเตอร์"),
         ),
         body: Padding(
-          padding: EdgeInsets.all(20),
-          child: FutureBuilder( builder: (context, snapshot) {
-              var data = json.decode(snapshot.data.toString()); // [{คอมพิวเตอร์คืออะไร...},{},{},{}]
-              return ListView.builder(
-                itemBuilder: (BuildContext context, int index) {
-                    return MyBox(data[index]['title'], data[index]['subtitle'], data[index]['image_url'],data[index]['detail']);
-                
-                },
-                itemCount: data.length, );
-
-          },
-          future: DefaultAssetBundle.of(context).loadString('assets/data.json'),
-
-
-          )
-        ));
+            padding: EdgeInsets.all(20),
+            child: FutureBuilder(
+              builder: (context, AsyncSnapshot snapshot) {
+                // var data = json.decode(snapshot.data
+                //     .toString()); // [{คอมพิวเตอร์คืออะไร...},{},{},{}]
+                var data = snapshot.data;
+                return ListView.builder(
+                  itemBuilder: (BuildContext context, int index) {
+                    return MyBox(data[index]['title'], data[index]['subtitle'],
+                        data[index]['image_url'], data[index]['detail']);
+                  },
+                  itemCount: data.length,
+                );
+              },
+              future: getData(),
+              // future:
+              //     DefaultAssetBundle.of(context).loadString('assets/data.json'),
+            )));
   }
 
   Widget MyBox(String title, String subtitle, String image_url, String detail) {
-    var v1,v2,v3,v4;
+    var v1, v2, v3, v4;
     v1 = title;
     v2 = subtitle;
     v3 = image_url;
@@ -50,8 +54,7 @@ class _HomePageState extends State<HomePage> {
           // color: Colors.blue[50],
           borderRadius: BorderRadius.circular(20),
           image: DecorationImage(
-              image: NetworkImage(
-                  image_url),
+              image: NetworkImage(image_url),
               fit: BoxFit.cover,
               colorFilter: ColorFilter.mode(
                   Colors.black.withOpacity(0.50), BlendMode.darken))),
@@ -70,13 +73,26 @@ class _HomePageState extends State<HomePage> {
             style: TextStyle(fontSize: 15, color: Colors.white),
           ),
           SizedBox(height: 18),
-          TextButton(onPressed: () {
-              print("Next Page >>>");
-              Navigator.push(context, MaterialPageRoute(builder: (context)=> DetailPage(v1,v2,v3,v4)));
-
-          }, child: Text("อ่านต่อ"))
+          TextButton(
+              onPressed: () {
+                print("Next Page >>>");
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => DetailPage(v1, v2, v3, v4)));
+              },
+              child: Text("อ่านต่อ"))
         ],
       ),
     );
+  }
+
+  Future getData() async {
+    // https://raw.githubusercontent.com/ketaway/BasicAPI/main/data.json
+    var url = Uri.https(
+        "raw.githubusercontent.com", "/ketaway/BasicAPI/main/data.json");
+    var response = await http.get(url);
+    var result = json.decode(response.body);
+    return result;
   }
 }
